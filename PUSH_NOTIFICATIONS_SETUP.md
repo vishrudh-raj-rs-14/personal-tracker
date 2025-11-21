@@ -76,7 +76,7 @@ In both edge functions (`morning-reminder` and `daily-checker`), update the cont
 
 ```typescript
 webPush.setVapidDetails(
-  'mailto:your-email@example.com', // ← Change this to your email
+  'mailto:vishrudh.shrinivas@gmail.com', // ← Change this to your email
   vapidPublicKey,
   vapidPrivateKey
 )

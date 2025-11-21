@@ -73,7 +73,7 @@ Make sure these are set in your Supabase Edge Function environment:
 
 In `supabase/functions/weekly-reminder/index.ts`, update line 97:
 ```typescript
-'mailto:your-email@example.com', // Change to your actual email
+'mailto:vishrudh.shrinivas@gmail.com', // Change to your actual email
 ```
 
 ## User Experience
