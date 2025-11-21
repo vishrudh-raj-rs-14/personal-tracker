@@ -115,14 +115,14 @@ export function ReportPage() {
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Calendar className="h-8 w-8" />
+    <div className="container mx-auto p-3 sm:p-4 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+          <Calendar className="h-6 w-6 sm:h-8 sm:w-8" />
           Fitness Report
         </h1>
         {logs && logs.length > 0 && (
-          <Button onClick={exportToCSV} variant="outline" className="flex items-center gap-2">
+          <Button onClick={exportToCSV} variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
             <Download className="h-4 w-4" />
             Export CSV
           </Button>
@@ -184,7 +184,7 @@ export function ReportPage() {
       ) : (
         <>
           {/* Summary Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <Card>
               <CardContent className="pt-6">
                 <div className="text-2xl font-bold">{logs.length}</div>
@@ -227,7 +227,7 @@ export function ReportPage() {
                   <CardTitle>Weight Trend</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={250}>
                     <LineChart data={weightData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="date" />
@@ -246,7 +246,7 @@ export function ReportPage() {
                 <CardTitle>Steps Over Time</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={stepsData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
@@ -265,7 +265,7 @@ export function ReportPage() {
                   <CardTitle>Calories Over Time</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={250}>
                     <LineChart data={caloriesData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="date" />
@@ -284,7 +284,7 @@ export function ReportPage() {
                 <CardTitle>Water Intake</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={waterData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
@@ -303,7 +303,7 @@ export function ReportPage() {
                   <CardTitle>Workout Days</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={workoutData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="date" />
@@ -323,7 +323,7 @@ export function ReportPage() {
                   <CardTitle>Sleep Hours</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={250}>
                     <LineChart data={sleepData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="date" />
@@ -341,10 +341,68 @@ export function ReportPage() {
           {/* Data Table */}
           <Card>
             <CardHeader>
-              <CardTitle>All Recorded Data ({logs.length} entries)</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">All Recorded Data ({logs.length} entries)</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
+              {/* Mobile: Card view, Desktop: Table view */}
+              <div className="block md:hidden space-y-3">
+                {logs.map((log) => (
+                  <div key={log.id} className="p-3 rounded-lg border bg-card space-y-2">
+                    <div className="font-semibold text-sm">{format(new Date(log.date), 'MMM dd, yyyy')}</div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {log.weight && (
+                        <div>
+                          <span className="text-muted-foreground">Weight: </span>
+                          <span className="font-medium">{log.weight} kg</span>
+                        </div>
+                      )}
+                      {log.steps && (
+                        <div>
+                          <span className="text-muted-foreground">Steps: </span>
+                          <span className="font-medium">{log.steps.toLocaleString()}</span>
+                        </div>
+                      )}
+                      {log.calories && (
+                        <div>
+                          <span className="text-muted-foreground">Calories: </span>
+                          <span className="font-medium">{log.calories.toLocaleString()}</span>
+                        </div>
+                      )}
+                      {log.water_liters && log.water_liters > 0 && (
+                        <div>
+                          <span className="text-muted-foreground">Water: </span>
+                          <span className="font-medium">{log.water_liters}L</span>
+                        </div>
+                      )}
+                      {log.workout_done && (
+                        <div>
+                          <span className="text-muted-foreground">Workout: </span>
+                          <span className="font-medium">{log.workout_type || 'Yes'}</span>
+                        </div>
+                      )}
+                      {log.wake_time && (
+                        <div>
+                          <span className="text-muted-foreground">Wake: </span>
+                          <span className="font-medium">{log.wake_time}</span>
+                        </div>
+                      )}
+                      {log.sleep_time && (
+                        <div>
+                          <span className="text-muted-foreground">Sleep: </span>
+                          <span className="font-medium">{log.sleep_time}</span>
+                        </div>
+                      )}
+                    </div>
+                    {log.notes && (
+                      <div className="text-xs text-muted-foreground pt-2 border-t">
+                        <span className="font-medium">Notes: </span>
+                        {log.notes}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b">

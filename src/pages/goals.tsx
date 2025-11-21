@@ -51,16 +51,16 @@ export function GoalsPage() {
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Goals</h1>
-        <Button onClick={handleSave} disabled={updateUser.isPending}>
+    <div className="container mx-auto p-3 sm:p-4 space-y-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold">Goals</h1>
+        <Button onClick={handleSave} disabled={updateUser.isPending} className="w-full sm:w-auto">
           <Save className="h-4 w-4 mr-2" />
           Save Goals
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Daily Steps Goal</CardTitle>

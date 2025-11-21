@@ -98,19 +98,19 @@ export function AnalyticsPage() {
   )
 
   return (
-    <div className="container mx-auto p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Analytics</h1>
-        <div className="flex gap-2">
+    <div className="container mx-auto p-3 sm:p-4 space-y-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold">Analytics</h1>
+        <div className="flex gap-2 w-full sm:w-auto">
           <button
             onClick={() => setView('week')}
-            className={`px-4 py-2 rounded ${view === 'week' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
+            className={`flex-1 sm:flex-none px-4 py-2 text-sm rounded ${view === 'week' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
           >
             Week
           </button>
           <button
             onClick={() => setView('month')}
-            className={`px-4 py-2 rounded ${view === 'month' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
+            className={`flex-1 sm:flex-none px-4 py-2 text-sm rounded ${view === 'month' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
           >
             Month
           </button>
@@ -123,7 +123,7 @@ export function AnalyticsPage() {
             <CardTitle>Consistency Score: {overallConsistency}%</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={250}>
               <LineChart data={consistencyData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
@@ -142,7 +142,7 @@ export function AnalyticsPage() {
               <CardTitle>Weight Over Time</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={weightData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
@@ -161,7 +161,7 @@ export function AnalyticsPage() {
             <CardTitle>Steps Over Time</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={250}>
               <LineChart data={stepsData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
@@ -180,7 +180,7 @@ export function AnalyticsPage() {
               <CardTitle>Calories Over Time</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={caloriesData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
@@ -199,7 +199,7 @@ export function AnalyticsPage() {
             <CardTitle>Water Intake Trend</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={250}>
               <BarChart data={waterData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
@@ -218,7 +218,7 @@ export function AnalyticsPage() {
               <CardTitle>Sleep Hours</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={sleepData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
@@ -237,7 +237,7 @@ export function AnalyticsPage() {
             <CardTitle>Workout Count per Week</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={250}>
               <BarChart data={workoutChartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="week" />

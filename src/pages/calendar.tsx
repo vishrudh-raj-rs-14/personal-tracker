@@ -86,35 +86,35 @@ export function CalendarPage() {
 
 
   return (
-    <div className="container mx-auto p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Calendar</h1>
-        <div className="flex items-center gap-2 text-2xl">
-          <Flame className="h-6 w-6 text-orange-500" />
+    <div className="container mx-auto p-3 sm:p-4 space-y-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold">Calendar</h1>
+        <div className="flex items-center gap-2 text-xl sm:text-2xl">
+          <Flame className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />
           <span className="font-bold">{streak} day streak</span>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>{format(currentMonth, 'MMMM yyyy')}</CardTitle>
-            <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <CardTitle className="text-lg sm:text-xl">{format(currentMonth, 'MMMM yyyy')}</CardTitle>
+            <div className="flex gap-2 w-full sm:w-auto">
               <button
                 onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-                className="px-3 py-1 rounded border hover:bg-accent"
+                className="flex-1 sm:flex-none px-3 py-1.5 text-sm rounded border hover:bg-accent"
               >
                 Previous
               </button>
               <button
                 onClick={() => setCurrentMonth(new Date())}
-                className="px-3 py-1 rounded border hover:bg-accent"
+                className="flex-1 sm:flex-none px-3 py-1.5 text-sm rounded border hover:bg-accent"
               >
                 Today
               </button>
               <button
                 onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-                className="px-3 py-1 rounded border hover:bg-accent"
+                className="flex-1 sm:flex-none px-3 py-1.5 text-sm rounded border hover:bg-accent"
               >
                 Next
               </button>
@@ -149,7 +149,7 @@ export function CalendarPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-7 gap-2">
+              <div className="grid grid-cols-7 gap-1 sm:gap-2">
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
                   <div key={day} className="text-center font-semibold text-sm p-2">
                     {day}
@@ -189,7 +189,7 @@ export function CalendarPage() {
                   return (
                     <div
                       key={day.toISOString()}
-                      className={`aspect-square p-2 rounded border flex flex-col items-center justify-center transition-colors ${
+                      className={`aspect-square p-1 sm:p-2 rounded border flex flex-col items-center justify-center transition-colors text-xs sm:text-sm ${
                         isCurrentDay ? 'ring-2 ring-primary' : ''
                       } ${
                         status === 'met'

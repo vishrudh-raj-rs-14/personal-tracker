@@ -147,22 +147,22 @@ export function DashboardPage() {
   if (isEditing) {
     return (
       <div className="container mx-auto p-4 space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Enter Today's Data</h1>
-          <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold">Enter Today's Data</h1>
+          <div className="flex gap-2 w-full sm:w-auto">
             {log && (
-              <Button onClick={() => setIsEditing(false)} variant="outline">
+              <Button onClick={() => setIsEditing(false)} variant="outline" className="flex-1 sm:flex-none">
                 Cancel
               </Button>
             )}
-            <Button onClick={handleSave} disabled={updateLog.isPending}>
+            <Button onClick={handleSave} disabled={updateLog.isPending} className="flex-1 sm:flex-none">
               <Save className="h-4 w-4 mr-2" />
               {updateLog.isPending ? 'Saving...' : 'Save'}
             </Button>
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>Weight (kg)</CardTitle>
@@ -336,11 +336,11 @@ export function DashboardPage() {
 
   // Main dashboard view
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+    <div className="container mx-auto p-3 sm:p-4 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
         {!log && (
-          <Button onClick={() => setIsEditing(true)}>
+          <Button onClick={() => setIsEditing(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             Add Today's Entry
           </Button>
@@ -349,7 +349,7 @@ export function DashboardPage() {
 
       {/* Charts Section - First */}
       {(weightData.length > 0 || stepsData.length > 0) && (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
           {weightData.length > 0 && (
             <Card>
               <CardHeader>
@@ -445,7 +445,7 @@ export function DashboardPage() {
         </CardHeader>
         <CardContent>
           {log ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
               {log.weight && (
                 <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
                   <div className="p-2 rounded-full bg-primary/10">
@@ -542,7 +542,62 @@ export function DashboardPage() {
             <CardTitle>Recent Days</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
+            {/* Mobile: Card view, Desktop: Table view */}
+            <div className="block md:hidden space-y-3">
+              {recentLogs.slice(0, 14).map((entry) => {
+                const entryDate = parseISO(entry.date)
+                const isTodayEntry = isToday(entryDate)
+                return (
+                  <div
+                    key={entry.id}
+                    className={`p-3 rounded-lg border ${
+                      isTodayEntry ? 'bg-primary/5 border-primary' : 'bg-card'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        {isTodayEntry && (
+                          <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
+                            Today
+                          </span>
+                        )}
+                        <span className="font-medium text-sm">{format(entryDate, 'MMM dd')}</span>
+                      </div>
+                      {entry.workout_done && (
+                        <Activity className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {entry.weight && (
+                        <div>
+                          <span className="text-muted-foreground">Weight: </span>
+                          <span className="font-medium">{entry.weight} kg</span>
+                        </div>
+                      )}
+                      {entry.steps && (
+                        <div>
+                          <span className="text-muted-foreground">Steps: </span>
+                          <span className="font-medium">{entry.steps.toLocaleString()}</span>
+                        </div>
+                      )}
+                      {entry.calories && (
+                        <div>
+                          <span className="text-muted-foreground">Calories: </span>
+                          <span className="font-medium">{entry.calories.toLocaleString()}</span>
+                        </div>
+                      )}
+                      {entry.water_liters && entry.water_liters > 0 && (
+                        <div>
+                          <span className="text-muted-foreground">Water: </span>
+                          <span className="font-medium">{entry.water_liters}L</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b">

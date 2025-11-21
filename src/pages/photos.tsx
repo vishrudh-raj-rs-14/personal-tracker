@@ -127,16 +127,16 @@ export function PhotosPage() {
   const totalPhotos = photos?.length || 0
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <div className="container mx-auto p-3 sm:p-4 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <ImageIcon className="h-8 w-8 text-primary" />
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+            <ImageIcon className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             Progress Photos
           </h1>
           {totalPhotos > 0 && (
-            <p className="text-muted-foreground mt-1">
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               {totalPhotos} photo{totalPhotos !== 1 ? 's' : ''} across {groupedPhotos.size} week{groupedPhotos.size !== 1 ? 's' : ''}
             </p>
           )}
@@ -154,6 +154,7 @@ export function PhotosPage() {
             onClick={() => document.getElementById('photo-upload')?.click()}
             disabled={uploadPhoto.isPending}
             size="lg"
+            className="w-full sm:w-auto"
           >
             <Upload className="h-4 w-4 mr-2" />
             {uploadPhoto.isPending ? 'Uploading...' : 'Upload Photo'}
@@ -230,7 +231,7 @@ export function PhotosPage() {
 
                 {isExpanded && (
                   <CardContent className="pt-0">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                       {weekPhotos.map((photo) => {
                         const imageUrl = photo.signed_url || photo.image_url
                         const isDeleting = deletingPhotoId === photo.id

@@ -70,7 +70,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-3 sm:p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Fitness Habit Tracker</CardTitle>
