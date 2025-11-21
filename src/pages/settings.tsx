@@ -36,8 +36,168 @@ export function SettingsPage() {
   }, [user])
 
   useEffect(() => {
+    // Run comprehensive diagnostics when Settings page loads
+    runPushNotificationDiagnostics()
     checkPushStatus()
   }, [])
+
+  const runPushNotificationDiagnostics = async () => {
+    console.log('🔍 ===== PUSH NOTIFICATION DIAGNOSTICS =====')
+    console.log('📱 Device & Browser Info:')
+    console.log('  User Agent:', navigator.userAgent)
+    console.log('  Platform:', navigator.platform)
+    console.log('  Language:', navigator.language)
+    console.log('  Cookie Enabled:', navigator.cookieEnabled)
+    console.log('  OnLine:', navigator.onLine)
+    
+    // Check protocol
+    console.log('\n🔒 Security:')
+    console.log('  Protocol:', window.location.protocol)
+    console.log('  Is HTTPS:', window.location.protocol === 'https:')
+    console.log('  Host:', window.location.host)
+    
+    // Check API support
+    console.log('\n✅ API Support:')
+    console.log('  Service Worker:', 'serviceWorker' in navigator)
+    console.log('  PushManager:', 'PushManager' in window)
+    console.log('  Notification API:', 'Notification' in window)
+    
+    // Check Notification permission
+    if ('Notification' in window) {
+      console.log('  Notification Permission:', Notification.permission)
+      console.log('  Notification.maxActions:', Notification.maxActions)
+    }
+    
+    // Check Service Worker
+    if ('serviceWorker' in navigator) {
+      console.log('\n⚙️ Service Worker Status:')
+      try {
+        const registration = await navigator.serviceWorker.getRegistration()
+        if (registration) {
+          console.log('  ✅ Service Worker Registered')
+          console.log('  Scope:', registration.scope)
+          console.log('  Active:', registration.active?.scriptURL)
+          console.log('  Waiting:', registration.waiting?.scriptURL)
+          console.log('  Installing:', registration.installing?.scriptURL)
+          
+          // Check if service worker is ready
+          try {
+            const ready = await navigator.serviceWorker.ready
+            console.log('  ✅ Service Worker Ready')
+            console.log('  Ready Scope:', ready.scope)
+          } catch (error) {
+            console.log('  ❌ Service Worker Not Ready:', error)
+          }
+        } else {
+          console.log('  ❌ No Service Worker Registration Found')
+        }
+        
+        // Check controller
+        if (navigator.serviceWorker.controller) {
+          console.log('  ✅ Service Worker Controlling Page')
+          console.log('  Controller Script:', navigator.serviceWorker.controller.scriptURL)
+        } else {
+          console.log('  ⚠️ No Service Worker Controller')
+        }
+      } catch (error) {
+        console.log('  ❌ Error checking service worker:', error)
+      }
+    }
+    
+    // Check PushManager
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      console.log('\n📲 Push Manager Status:')
+      try {
+        const registration = await navigator.serviceWorker.ready
+        const subscription = await registration.pushManager.getSubscription()
+        
+        if (subscription) {
+          console.log('  ✅ Already Subscribed')
+          console.log('  Endpoint:', subscription.endpoint.substring(0, 50) + '...')
+          const keys = subscription.getKey('p256dh')
+          const auth = subscription.getKey('auth')
+          console.log('  Has p256dh key:', !!keys)
+          console.log('  Has auth key:', !!auth)
+        } else {
+          console.log('  ⚠️ Not Subscribed')
+        }
+        
+        // Check supported content encodings
+        const supportedEncodings = registration.pushManager.supportedContentEncodings || []
+        console.log('  Supported Encodings:', supportedEncodings)
+      } catch (error) {
+        console.log('  ❌ Error checking push manager:', error)
+      }
+    }
+    
+    // Check VAPID key
+    console.log('\n🔑 VAPID Key:')
+    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
+    console.log('  Key exists:', !!vapidKey)
+    console.log('  Key length:', vapidKey?.length || 0)
+    if (vapidKey) {
+      console.log('  Key preview:', vapidKey.substring(0, 30) + '...')
+      console.log('  Key format valid:', /^[A-Za-z0-9_-]+$/.test(vapidKey))
+    } else {
+      console.log('  ❌ VAPID key not configured!')
+    }
+    
+    // Browser detection
+    console.log('\n🌐 Browser Detection:')
+    const ua = navigator.userAgent
+    const isIOS = /iPad|iPhone|iPod/.test(ua)
+    const isAndroid = /Android/.test(ua)
+    const isChrome = /Chrome/.test(ua) && !/Edge|OPR|Edg/.test(ua)
+    const isFirefox = /Firefox/.test(ua)
+    const isSafari = /^((?!chrome|android).)*safari/i.test(ua)
+    const isEdge = /Edg/.test(ua)
+    
+    console.log('  iOS:', isIOS)
+    console.log('  Android:', isAndroid)
+    console.log('  Chrome:', isChrome)
+    console.log('  Firefox:', isFirefox)
+    console.log('  Safari:', isSafari)
+    console.log('  Edge:', isEdge)
+    
+    // iOS version check (rough)
+    if (isIOS) {
+      const iosVersion = ua.match(/OS (\d+)_(\d+)/)
+      if (iosVersion) {
+        const major = parseInt(iosVersion[1])
+        const minor = parseInt(iosVersion[2])
+        console.log('  iOS Version:', `${major}.${minor}`)
+        console.log('  Push Support (iOS 16.4+):', major > 16 || (major === 16 && minor >= 4))
+      }
+    }
+    
+    // Final summary
+    console.log('\n📊 Summary:')
+    const hasServiceWorker = 'serviceWorker' in navigator
+    const hasPushManager = 'PushManager' in window
+    const hasNotification = 'Notification' in window
+    const isHTTPS = window.location.protocol === 'https:'
+    const hasVAPID = !!vapidKey
+    
+    console.log('  Service Worker Support:', hasServiceWorker ? '✅' : '❌')
+    console.log('  PushManager Support:', hasPushManager ? '✅' : '❌')
+    console.log('  Notification API:', hasNotification ? '✅' : '❌')
+    console.log('  HTTPS:', isHTTPS ? '✅' : '❌')
+    console.log('  VAPID Key:', hasVAPID ? '✅' : '❌')
+    
+    const allSupported = hasServiceWorker && hasPushManager && hasNotification && isHTTPS && hasVAPID
+    console.log('  Overall Support:', allSupported ? '✅ READY' : '❌ NOT READY')
+    
+    if (!allSupported) {
+      console.log('\n⚠️ Issues Found:')
+      if (!hasServiceWorker) console.log('  - Service Workers not supported')
+      if (!hasPushManager) console.log('  - PushManager not supported (browser too old or unsupported)')
+      if (!hasNotification) console.log('  - Notification API not supported')
+      if (!isHTTPS) console.log('  - Not using HTTPS (required for push notifications)')
+      if (!hasVAPID) console.log('  - VAPID key not configured')
+    }
+    
+    console.log('🔍 ===== END DIAGNOSTICS =====\n')
+  }
 
   const checkPushStatus = async () => {
     setCheckingPush(true)
@@ -48,10 +208,15 @@ export function SettingsPage() {
   }
 
   const handlePushToggle = async (enabled: boolean) => {
+    console.log('🔄 Push Toggle:', enabled ? 'ENABLING' : 'DISABLING')
     try {
       if (enabled) {
+        console.log('📲 Attempting to enable push notifications...')
         const result = await requestPushPermission()
+        console.log('📲 Request result:', result)
+        
         if (result.subscription) {
+          console.log('✅ Push notification subscription successful!')
           setPushEnabled(true)
           toast({
             title: 'Push notifications enabled!',
@@ -60,28 +225,37 @@ export function SettingsPage() {
         } else {
           // Show specific error message
           const errorMsg = result.error || 'Failed to enable push notifications. Please try again.'
+          console.error('❌ Push notification error:', result.error)
+          console.error('❌ Full error details:', result)
+          
+          // Run diagnostics again to see current state
+          console.log('🔍 Re-running diagnostics after error...')
+          await runPushNotificationDiagnostics()
+          
           toast({
             title: 'Failed to enable notifications',
             description: errorMsg,
             variant: 'destructive',
           })
-          console.error('Push notification error:', result.error)
         }
       } else {
+        console.log('🔕 Disabling push notifications...')
         await unsubscribeFromPush()
         setPushEnabled(false)
+        console.log('✅ Push notifications disabled')
         toast({
           title: 'Push notifications disabled',
           description: 'You will no longer receive push notifications.',
         })
       }
     } catch (error: any) {
+      console.error('❌ Exception during push toggle:', error)
+      console.error('❌ Error stack:', error.stack)
       toast({
         title: 'Error',
         description: error.message || 'Failed to update push notification settings.',
         variant: 'destructive',
       })
-      console.error('Push toggle error:', error)
     }
   }
 
