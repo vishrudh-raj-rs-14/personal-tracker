@@ -2,9 +2,10 @@ import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useWeeklyPhotos, useUploadPhoto, useDeletePhoto } from '@/hooks/use-photos'
-import { Upload, X, ChevronDown, ChevronUp, Calendar, Image as ImageIcon, Trash2 } from 'lucide-react'
+import { Upload, X, ChevronDown, ChevronUp, Calendar, Image as ImageIcon, Trash2, AlertCircle } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 import { format, parseISO, startOfWeek, endOfWeek } from 'date-fns'
+import { getWeekStart } from '@/lib/utils'
 
 type PhotoWithUrl = {
   id: string
@@ -125,9 +126,39 @@ export function PhotosPage() {
   }
 
   const totalPhotos = photos?.length || 0
+  const currentWeekStart = getWeekStart()
+  const hasPhotosThisWeek = photos?.some(
+    (photo) => photo.week_start === currentWeekStart
+  ) || false
 
   return (
     <div className="container mx-auto p-3 sm:p-4 space-y-4 sm:space-y-6">
+      {/* Weekly Photo Reminder Banner */}
+      {!hasPhotosThisWeek && (
+        <Card className="border-primary/50 bg-primary/5">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-4">
+              <div className="p-2 rounded-full bg-primary/10">
+                <AlertCircle className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold mb-1">📸 Weekly Photo Reminder</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Don't forget to upload your progress photo for this week! Track your transformation over time.
+                </p>
+                <Button
+                  onClick={() => document.getElementById('photo-upload')?.click()}
+                  size="sm"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Photo Now
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>

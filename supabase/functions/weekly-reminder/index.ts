@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import webPush from 'https://esm.sh/web-push@3.6.6'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -31,16 +32,23 @@ serve(async (req) => {
     if (usersError) throw usersError
 
     const today = new Date()
-    const monday = new Date(today)
-    monday.setDate(today.getDate() - ((today.getDay() + 6) % 7)) // Get Monday of current week
+    // Get Monday of current week (week starts on Monday)
+    const day = today.getDay()
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1) // Monday as first day
+    const monday = new Date(today.setDate(diff))
+    monday.setHours(0, 0, 0, 0)
 
     // Get logs from last week
     const weekStart = new Date(monday)
     weekStart.setDate(weekStart.getDate() - 7)
     const weekEnd = new Date(monday)
+    weekEnd.setDate(weekEnd.getDate() - 1) // Sunday of last week
 
     const weekStartStr = weekStart.toISOString().split('T')[0]
     const weekEndStr = weekEnd.toISOString().split('T')[0]
+    
+    // Current week start (Monday of this week)
+    const currentWeekStart = monday.toISOString().split('T')[0]
 
     for (const user of users || []) {
       // Check if reminder already sent this week
@@ -65,24 +73,69 @@ serve(async (req) => {
       const workoutCount = logs?.filter((log) => log.workout_done).length || 0
       const avgSteps = logs?.reduce((sum, log) => sum + (log.steps || 0), 0) / (logs?.length || 1) || 0
 
-      // Send email reminder (using Supabase's built-in email)
-      // Note: You'll need to configure email in Supabase dashboard
-      const emailBody = `
-        Hi ${user.name || 'there'},
+      // Check if user has uploaded photos for this week
+      const { data: currentWeekPhotos } = await supabaseAdmin
+        .from('weekly_photos')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('week_start', currentWeekStart)
 
-        It's time for your weekly check-in!
+      const hasPhotosThisWeek = currentWeekPhotos && currentWeekPhotos.length > 0
 
-        Last week's summary:
-        - Workouts: ${workoutCount} days
-        - Average steps: ${Math.round(avgSteps)}
+      // Prepare reminder message
+      const reminderMessage = hasPhotosThisWeek
+        ? `Great job! You've uploaded ${currentWeekPhotos.length} photo(s) this week. Keep tracking your progress! 📸`
+        : `📸 Weekly Photo Reminder: Don't forget to upload your progress photo this week! Track your transformation over time.`
 
-        Don't forget to:
-        1. Upload your weekly progress photo
-        2. Enter this week's weight measurement
-        3. Review your calories trend
+      // Get user's push subscriptions
+      const { data: subscriptions } = await supabaseAdmin
+        .from('push_subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
 
-        Keep up the great work!
-      `
+      // Send push notifications
+      if (subscriptions && subscriptions.length > 0) {
+        const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY') || ''
+        const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY') || ''
+        
+        if (vapidPublicKey && vapidPrivateKey) {
+          webPush.setVapidDetails(
+            'mailto:your-email@example.com', // Update with your email
+            vapidPublicKey,
+            vapidPrivateKey
+          )
+
+          for (const sub of subscriptions) {
+            try {
+              await webPush.sendNotification(
+                {
+                  endpoint: sub.endpoint,
+                  keys: {
+                    p256dh: sub.p256dh,
+                    auth: sub.auth,
+                  },
+                },
+                JSON.stringify({
+                  title: hasPhotosThisWeek ? 'Weekly Check-in ✅' : 'Weekly Photo Reminder 📸',
+                  body: reminderMessage,
+                  icon: '/pwa-192x192.png',
+                  badge: '/pwa-192x192.png',
+                  url: '/photos',
+                })
+              )
+            } catch (error) {
+              // If subscription is invalid, remove it
+              if (error.statusCode === 410 || error.statusCode === 404) {
+                await supabaseAdmin
+                  .from('push_subscriptions')
+                  .delete()
+                  .eq('id', sub.id)
+              }
+              console.error(`Failed to send push to ${user.email}:`, error)
+            }
+          }
+        }
+      }
 
       // Log the reminder
       await supabaseAdmin
@@ -92,8 +145,7 @@ serve(async (req) => {
           type: 'weekly',
         })
 
-      // In production, you would send actual email/push notifications here
-      console.log(`Weekly reminder for ${user.email}:`, emailBody)
+      console.log(`Weekly reminder for ${user.email}:`, reminderMessage)
     }
 
     return new Response(

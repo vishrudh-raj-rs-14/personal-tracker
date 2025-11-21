@@ -11,6 +11,7 @@ import { PhotosPage } from '@/pages/photos'
 import { GoalsPage } from '@/pages/goals'
 import { SettingsPage } from '@/pages/settings'
 import { ReportPage } from '@/pages/report'
+import { usePhotoReminder } from '@/hooks/use-photo-reminder'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,9 +36,18 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function PhotoReminderWrapper() {
+  usePhotoReminder()
+  return null
+}
+
 function AppRoutes() {
+  const { user } = useAuth()
+
   return (
-    <Routes>
+    <>
+      {user && <PhotoReminderWrapper />}
+      <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route
         path="/dashboard"
@@ -103,7 +113,8 @@ function AppRoutes() {
         }
       />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
-    </Routes>
+      </Routes>
+    </>
   )
 }
 
