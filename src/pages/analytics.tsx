@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useDailyLogs } from '@/hooks/use-daily-log'
 import { formatDate, calculateConsistencyScore } from '@/lib/utils'
-import { subDays, subWeeks, subMonths, format } from 'date-fns'
+import { subWeeks, subMonths, format } from 'date-fns'
 import {
   LineChart,
   Line,

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { useWeeklyPhotos, useUploadPhoto, useDeletePhoto } from '@/hooks/use-photos'
 import { Upload, X, ChevronDown, ChevronUp, Calendar, Image as ImageIcon, Trash2 } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
-import { format, parseISO, startOfWeek, endOfWeek, isSameWeek } from 'date-fns'
+import { format, parseISO, startOfWeek, endOfWeek } from 'date-fns'
 
 type PhotoWithUrl = {
   id: string

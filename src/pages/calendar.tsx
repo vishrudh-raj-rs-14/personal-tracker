@@ -47,24 +47,6 @@ export function CalendarPage() {
     }
   }
 
-  const checkAllGoalsMet = (log: any) => {
-    if (!log || !user) return false
-    
-    const stepsMet = !user.steps_goal || (log.steps ?? 0) >= user.steps_goal
-    const waterMet = !user.water_goal_liters || (log.water_liters ?? 0) >= user.water_goal_liters
-    const workoutMet = log.workout_done === true
-    
-    let sleepMet = true
-    if (user.sleep_goal_hours && log.wake_time && log.sleep_time) {
-      const wake = new Date(`2000-01-01T${log.wake_time}`)
-      const sleep = new Date(`2000-01-01T${log.sleep_time}`)
-      let sleepHours = (wake.getTime() - sleep.getTime()) / (1000 * 60 * 60)
-      if (sleepHours < 0) sleepHours += 24
-      sleepMet = sleepHours >= user.sleep_goal_hours
-    }
-    
-    return stepsMet && waterMet && workoutMet && sleepMet
-  }
 
   const getLogForDate = (date: Date) => {
     const dateStr = formatDate(date)
@@ -102,20 +84,6 @@ export function CalendarPage() {
     }
   }
 
-  const getGoalIcon = (goalType: GoalType) => {
-    switch (goalType) {
-      case 'workout':
-        return <Activity className="h-4 w-4" />
-      case 'steps':
-        return <Footprints className="h-4 w-4" />
-      case 'water':
-        return <Droplet className="h-4 w-4" />
-      case 'sleep':
-        return <Moon className="h-4 w-4" />
-      default:
-        return null
-    }
-  }
 
   return (
     <div className="container mx-auto p-4 space-y-4">
