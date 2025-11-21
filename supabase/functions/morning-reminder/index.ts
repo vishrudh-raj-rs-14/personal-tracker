@@ -1,6 +1,17 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import webPush from 'https://esm.sh/web-push@3.6.6'
+
+// Dynamic import of web-push - will be loaded when needed
+async function getWebPush() {
+  try {
+    // Try npm: specifier first (better Deno compatibility)
+    const module = await import('npm:web-push@3.6.6')
+    return module.default || module
+  } catch (e) {
+    console.warn('web-push not available:', e.message)
+    return null
+  }
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -58,40 +69,49 @@ serve(async (req) => {
           const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY') || ''
           
           if (vapidPublicKey && vapidPrivateKey) {
-            webPush.setVapidDetails(
-              'mailto:your-email@example.com', // Contact email
-              vapidPublicKey,
-              vapidPrivateKey
-            )
-
-            for (const sub of subscriptions) {
+            const webPush = await getWebPush()
+            if (webPush) {
               try {
-                await webPush.sendNotification(
-                  {
-                    endpoint: sub.endpoint,
-                    keys: {
-                      p256dh: sub.p256dh,
-                      auth: sub.auth,
-                    },
-                  },
-                  JSON.stringify({
-                    title: 'Morning Reminder 🌅',
-                    body: message,
-                    icon: '/pwa-192x192.png',
-                    badge: '/pwa-192x192.png',
-                    url: '/dashboard',
-                  })
+                webPush.setVapidDetails(
+                  'mailto:vishrudh.shrinivas@gmail.com', // Contact email
+                  vapidPublicKey,
+                  vapidPrivateKey
                 )
-              } catch (error) {
-                // If subscription is invalid, remove it
-                if (error.statusCode === 410 || error.statusCode === 404) {
-                  await supabaseAdmin
-                    .from('push_subscriptions')
-                    .delete()
-                    .eq('id', sub.id)
+
+                for (const sub of subscriptions) {
+                  try {
+                    await webPush.sendNotification(
+                      {
+                        endpoint: sub.endpoint,
+                        keys: {
+                          p256dh: sub.p256dh,
+                          auth: sub.auth,
+                        },
+                      },
+                      JSON.stringify({
+                        title: 'Morning Reminder 🌅',
+                        body: message,
+                        icon: '/pwa-192x192.png',
+                        badge: '/pwa-192x192.png',
+                        url: '/dashboard',
+                      })
+                    )
+                  } catch (error) {
+                    // If subscription is invalid, remove it
+                    if (error.statusCode === 410 || error.statusCode === 404) {
+                      await supabaseAdmin
+                        .from('push_subscriptions')
+                        .delete()
+                        .eq('id', sub.id)
+                    }
+                    console.error(`Failed to send push to ${user.email}:`, error)
+                  }
                 }
-                console.error(`Failed to send push to ${user.email}:`, error)
+              } catch (error) {
+                console.error('Error setting up web-push:', error)
               }
+            } else {
+              console.warn('web-push library not available, skipping push notifications')
             }
           }
         }
