@@ -50,19 +50,22 @@ export function SettingsPage() {
   const handlePushToggle = async (enabled: boolean) => {
     try {
       if (enabled) {
-        const subscription = await requestPushPermission()
-        if (subscription) {
+        const result = await requestPushPermission()
+        if (result.subscription) {
           setPushEnabled(true)
           toast({
             title: 'Push notifications enabled!',
             description: 'You will now receive reminders at 8 AM and 9 PM.',
           })
         } else {
+          // Show specific error message
+          const errorMsg = result.error || 'Failed to enable push notifications. Please try again.'
           toast({
-            title: 'Permission denied',
-            description: 'Please allow notifications in your browser settings.',
+            title: 'Failed to enable notifications',
+            description: errorMsg,
             variant: 'destructive',
           })
+          console.error('Push notification error:', result.error)
         }
       } else {
         await unsubscribeFromPush()
@@ -78,6 +81,7 @@ export function SettingsPage() {
         description: error.message || 'Failed to update push notification settings.',
         variant: 'destructive',
       })
+      console.error('Push toggle error:', error)
     }
   }
 

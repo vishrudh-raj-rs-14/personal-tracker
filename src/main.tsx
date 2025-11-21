@@ -3,18 +3,8 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './styles/globals.css'
 
-// Register service worker for push notifications
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        console.log('Service Worker registered:', registration)
-      })
-      .catch((error) => {
-        console.log('Service Worker registration failed:', error)
-      })
-  })
-}
+// Note: Service worker is automatically registered by VitePWA plugin
+// We just need to ensure it's ready before using push notifications
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

@@ -1,6 +1,5 @@
-// This file will be processed by VitePWA injectManifest
-// The workbox code will be injected here automatically
-// We add our custom push notification handlers below
+// Custom service worker code that will be injected into VitePWA's service worker
+// This file contains push notification handlers
 
 // Push notification event handler
 self.addEventListener('push', (event) => {

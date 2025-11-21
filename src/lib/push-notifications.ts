@@ -11,55 +11,118 @@ export interface PushSubscriptionData {
 /**
  * Request push notification permission and subscribe user
  */
-export async function requestPushPermission(): Promise<PushSubscription | null> {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.warn('Push notifications are not supported in this browser')
-    return null
+export async function requestPushPermission(): Promise<{ subscription: PushSubscription | null; error?: string }> {
+  if (!('serviceWorker' in navigator)) {
+    return { subscription: null, error: 'Service workers are not supported in this browser' }
+  }
+
+  if (!('PushManager' in window)) {
+    return { subscription: null, error: 'Push notifications are not supported in this browser' }
   }
 
   try {
+    // Wait for service worker to be ready
+    let registration: ServiceWorkerRegistration
+    try {
+      registration = await navigator.serviceWorker.ready
+    } catch (error) {
+      return { 
+        subscription: null, 
+        error: 'Service worker not registered. Please refresh the page and try again.' 
+      }
+    }
+
     // Check if already subscribed
-    const registration = await navigator.serviceWorker.ready
     const existingSubscription = await registration.pushManager.getSubscription()
     
     if (existingSubscription) {
       // Already subscribed, save to database
-      await saveSubscriptionToDatabase(existingSubscription)
-      return existingSubscription
+      try {
+        await saveSubscriptionToDatabase(existingSubscription)
+        return { subscription: existingSubscription }
+      } catch (error: any) {
+        return { subscription: null, error: `Failed to save subscription: ${error.message}` }
+      }
     }
 
     // Request permission
     const permission = await Notification.requestPermission()
     
     if (permission !== 'granted') {
-      console.warn('Push notification permission denied')
-      return null
+      if (permission === 'denied') {
+        return { 
+          subscription: null, 
+          error: 'Notifications are blocked. Please enable them in your browser settings and try again.' 
+        }
+      }
+      return { 
+        subscription: null, 
+        error: 'Notification permission was not granted. Please allow notifications when prompted.' 
+      }
     }
 
     // Get VAPID public key from environment
     const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
     
     if (!vapidPublicKey) {
-      console.warn('VAPID public key not configured')
-      return null
+      return { 
+        subscription: null, 
+        error: 'VAPID public key not configured. Please contact support.' 
+      }
     }
 
     // Convert VAPID key to Uint8Array
-    const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey)
+    let applicationServerKey: Uint8Array
+    try {
+      applicationServerKey = urlBase64ToUint8Array(vapidPublicKey)
+    } catch (error) {
+      return { 
+        subscription: null, 
+        error: 'Invalid VAPID key format. Please contact support.' 
+      }
+    }
 
     // Subscribe to push notifications
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: applicationServerKey as BufferSource,
-    })
+    let subscription: PushSubscription
+    try {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: applicationServerKey as BufferSource,
+      })
+    } catch (error: any) {
+      console.error('Subscription error:', error)
+      if (error.name === 'NotAllowedError') {
+        return { 
+          subscription: null, 
+          error: 'Subscription not allowed. Please check your browser settings.' 
+        }
+      }
+      return { 
+        subscription: null, 
+        error: `Failed to subscribe: ${error.message || 'Unknown error'}` 
+      }
+    }
 
     // Save subscription to database
-    await saveSubscriptionToDatabase(subscription)
-
-    return subscription
-  } catch (error) {
+    try {
+      await saveSubscriptionToDatabase(subscription)
+      return { subscription }
+    } catch (error: any) {
+      // Subscription created but failed to save - unsubscribe to clean up
+      try {
+        await subscription.unsubscribe()
+      } catch {}
+      return { 
+        subscription: null, 
+        error: `Failed to save subscription: ${error.message}` 
+      }
+    }
+  } catch (error: any) {
     console.error('Error requesting push permission:', error)
-    return null
+    return { 
+      subscription: null, 
+      error: `Unexpected error: ${error.message || 'Unknown error'}` 
+    }
   }
 }
 
