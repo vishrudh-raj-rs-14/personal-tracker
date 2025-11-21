@@ -65,7 +65,15 @@ export function SettingsPage() {
     // Check Notification permission
     if ('Notification' in window) {
       console.log('  Notification Permission:', Notification.permission)
-      console.log('  Notification.maxActions:', Notification.maxActions)
+      // Note: maxActions is experimental and may not be available
+      try {
+        const maxActions = (Notification as any).maxActions
+        if (maxActions !== undefined) {
+          console.log('  Notification.maxActions:', maxActions)
+        }
+      } catch (e) {
+        // Ignore if not available
+      }
     }
     
     // Check Service Worker
@@ -122,9 +130,16 @@ export function SettingsPage() {
           console.log('  ⚠️ Not Subscribed')
         }
         
-        // Check supported content encodings
-        const supportedEncodings = registration.pushManager.supportedContentEncodings || []
-        console.log('  Supported Encodings:', supportedEncodings)
+        // Check supported content encodings (experimental API)
+        try {
+          const pushManager = registration.pushManager as any
+          const supportedEncodings = pushManager.supportedContentEncodings || []
+          if (supportedEncodings.length > 0) {
+            console.log('  Supported Encodings:', supportedEncodings)
+          }
+        } catch (e) {
+          // Ignore if not available
+        }
       } catch (error) {
         console.log('  ❌ Error checking push manager:', error)
       }
