@@ -16,8 +16,49 @@ export async function requestPushPermission(): Promise<{ subscription: PushSubsc
     return { subscription: null, error: 'Service workers are not supported in this browser' }
   }
 
-  if (!('PushManager' in window)) {
+  // For iOS Safari, PushManager might not be on window, but available through service worker
+  // So we check by trying to access it through the service worker registration
+  let hasPushSupport = false
+  let isIOS = false
+  try {
+    const registration = await navigator.serviceWorker.ready
+    // Try to access pushManager - if it exists, push is supported
+    hasPushSupport = 'pushManager' in registration
+    // Check if iOS
+    isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  } catch (error) {
+    // If we can't get service worker, check window as fallback
+    hasPushSupport = 'PushManager' in window
+    isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  }
+
+  if (!hasPushSupport) {
+    // Check if it's iOS Safari - give more helpful message
+    if (isIOS) {
+      // Check if running as PWA (standalone mode)
+      const isStandalone = (window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches
+      if (!isStandalone) {
+        return { 
+          subscription: null, 
+          error: 'Push notifications on iOS require the app to be installed as a PWA. Please tap the Share button → "Add to Home Screen", then open the app from your home screen.' 
+        }
+      }
+      return { 
+        subscription: null, 
+        error: 'Push notifications are not available. Make sure you\'re using iOS 16.4+ and have the app installed from the home screen.' 
+      }
+    }
     return { subscription: null, error: 'Push notifications are not supported in this browser' }
+  }
+
+  // Check Notification API
+  if (!('Notification' in window)) {
+    // On iOS, Notification might not be on window but still available
+    // We'll try to use it anyway and catch the error
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    if (!isIOS) {
+      return { subscription: null, error: 'Notification API is not available' }
+    }
   }
 
   try {
@@ -46,13 +87,37 @@ export async function requestPushPermission(): Promise<{ subscription: PushSubsc
     }
 
     // Request permission
-    const permission = await Notification.requestPermission()
+    // On iOS Safari, Notification API might not be on window but still work
+    let permission: NotificationPermission = 'default'
+    try {
+      if ('Notification' in window && typeof Notification.requestPermission === 'function') {
+        permission = await Notification.requestPermission()
+      } else {
+        // For iOS Safari in PWA mode, Notification might work even if not on window
+        // Try to proceed with subscription - if it fails, we'll catch it
+        // iOS Safari might allow push without explicit Notification.requestPermission
+        permission = 'default' // We'll try to subscribe anyway
+      }
+    } catch (error: any) {
+      // If Notification API is truly not available, we can't proceed
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      if (isIOS) {
+        return { 
+          subscription: null, 
+          error: 'Notification API is not available. Make sure the app is installed as a PWA (Add to Home Screen) and you\'re using iOS 16.4+.' 
+        }
+      }
+      return { 
+        subscription: null, 
+        error: `Failed to request notification permission: ${error.message || 'Unknown error'}` 
+      }
+    }
     
     if (permission !== 'granted') {
       if (permission === 'denied') {
         return { 
           subscription: null, 
-          error: 'Notifications are blocked. Please enable them in your browser settings and try again.' 
+          error: 'Notifications are blocked. Please enable them in your browser/device settings and try again.' 
         }
       }
       return { 
@@ -201,12 +266,16 @@ export async function hasPushPermission(): Promise<boolean> {
  * Check if user is subscribed to push notifications
  */
 export async function isSubscribedToPush(): Promise<boolean> {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+  if (!('serviceWorker' in navigator)) {
     return false
   }
 
   try {
     const registration = await navigator.serviceWorker.ready
+    // Check if pushManager is available (might not be on window for iOS)
+    if (!('pushManager' in registration)) {
+      return false
+    }
     const subscription = await registration.pushManager.getSubscription()
     return subscription !== null
   } catch (error) {
